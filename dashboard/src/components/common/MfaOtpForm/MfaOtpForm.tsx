@@ -1,0 +1,85 @@
+import { Button } from '@/components/ui/v3/button';
+import { Input } from '@/components/ui/v3/input';
+import { getToastStyleProps } from '@/utils/constants/settings';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from 'react';
+import toast from 'react-hot-toast';
+
+interface Props {
+  sendMfaOtp: (code: string) => Promise<any>;
+  loading: boolean;
+  requestNewMfaTicket?: () => Promise<void>;
+}
+
+function MfaOtpForm({ sendMfaOtp, loading, requestNewMfaTicket }: Props) {
+  const [otpValue, setOtpValue] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const isMfaTicketInvalid = useRef(false);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  async function submitTOTP() {
+    if (otpValue.length === 6 && !isSubmitting) {
+      setIsSubmitting(true);
+      if (requestNewMfaTicket && isMfaTicketInvalid.current) {
+        await requestNewMfaTicket();
+      }
+      const result = await sendMfaOtp(otpValue);
+      if (result?.error) {
+        isMfaTicketInvalid.current = true;
+        toast.error(
+          result.error?.message ||
+            'An error occurred while verifying TOTP. Please try again.',
+          getToastStyleProps(),
+        );
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 10);
+      }
+    }
+    setIsSubmitting(false);
+  }
+
+  async function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const code = event.target.value.replace(/[^0-9]/g, '');
+    setOtpValue(code);
+  }
+
+  async function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
+      submitTOTP();
+    }
+  }
+
+  const isInputDisabled = loading || isSubmitting;
+  const isButtonDisabled = isInputDisabled || otpValue.length !== 6;
+
+  return (
+    <div className="relative grid w-full grid-flow-row gap-4 bg-transparent">
+      <Input
+        ref={inputRef}
+        value={otpValue}
+        placeholder="Enter TOTP"
+        className="!bg-transparent"
+        disabled={isInputDisabled}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+      />
+      <Button disabled={isButtonDisabled} onClick={submitTOTP}>
+        {loading ? 'Verifying...' : 'Verify'}
+      </Button>
+    </div>
+  );
+}
+
+export default MfaOtpForm;
