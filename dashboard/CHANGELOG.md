@@ -1,5 +1,15 @@
 # @nhost/dashboard
 
+## 2.35.0
+
+### Minor Changes
+
+- 412692c: chore (dashboard): Turn on strictNullChecks config
+
+### Patch Changes
+
+- 89f6fe6: chore (docker-example): update dashboard image version
+
 ## 2.34.0
 
 ### Minor Changes
