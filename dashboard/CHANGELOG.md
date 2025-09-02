@@ -1,5 +1,11 @@
 # @nhost/dashboard
 
+## 2.35.1
+
+### Patch Changes
+
+- 92e71a6: fix: minor fixes to csp
+
 ## 2.35.0
 
 ### Minor Changes
